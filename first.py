@@ -38,9 +38,6 @@ def main():
 
         #Add Camera sensor to Vehicle
         camera_bp = blueprintLibrary.find('sensor.camera.rgb')
-        camera_bp.set_attribute('height',800)
-        camera_bp.set_attribute('width',600)
-        camera_bp.set_attribute('fov',90)
         camera_transform = carla.Transform(carla.Location(x=1.5,z=2.4))
         camera = world.spawn_actor(camera_bp,camera_transform,attach_to=vehicle)
         #Save images from camera to output folder
