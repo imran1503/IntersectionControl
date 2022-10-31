@@ -38,8 +38,8 @@ def main():
 
         #Add Camera sensor to Vehicle
         camera_bp = blueprintLibrary.find('sensor.camera.rgb')
-        camera_bp.set_attribute('image_size_x',800)
-        camera_bp.set_attribute('image_size_y',600)
+        camera_bp.set_attribute('height',800)
+        camera_bp.set_attribute('width',600)
         camera_bp.set_attribute('fov',90)
         camera_transform = carla.Transform(carla.Location(x=1.5,z=2.4))
         camera = world.spawn_actor(camera_bp,camera_transform,attach_to=vehicle)
@@ -54,7 +54,7 @@ def main():
 
             if npc is not None:
                 actorList.append(npc)
-                npc.set_autopilot = True
+                npc.set_autopilot(True)
                 print('created%s'%npc.type_id)
 
         #Wait 15 seconds
