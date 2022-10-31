@@ -20,27 +20,42 @@ import carla
 
 def main():
     actorList = []
+    try:
+        #Connect to carla server and load Town01 map
+        client = carla.Client('localhost', 2000)
+        client.set_timeout(10.0)
+        world = client.load_world('Town01')
+        print(client.get_available_maps())
 
+        #Spawn Cybertruck Vehicle actor, add to actorList
+        blueprintLibrary = world.get_blueprint_library()
+        vehicle_bp = blueprintLibrary.filter('cybertruck')[0]
+        transform = carla.Transform(carla.Location(x=200, y=195, z=200), carla.Rotation(yaw=0))
+        vehicle = world.try_spawn_actor(vehicle_bp, transform)
+        vehicle.set_autopilot = True
+        print("Len pre Append" , (len(actorList)))
+        actorList.append(vehicle)
+        print("Len post Append" , len(actorList))
 
-    client = carla.Client('localhost', 2000)
-    client.set_timeout(10.0)
-    world = client.load_world('Town01')
-    print(client.get_available_maps())
+        #Spawn multiple random vehicles with autopilot
+        for _ in range(0,100):
+            transform.location.x += 8.0
+            bp = blueprintLibrary.filter('vehicle.*')[0]
+            npc = world.try_spawn_actor(bp,transform)
 
-    blueprintLibrary = world.get_blueprint_library()
-    vehicle_bp = blueprintLibrary.filter('cybertruck')[0]
-    transform = carla.Transform(carla.Location(x=200, y=195, z=200), carla.Rotation(yaw=0))
-    vehicle = world.spawn_actor(vehicle_bp, transform)
-    print("Len pre Append" , (len(actorList)))
-    actorList.append(vehicle)
-    print("Len post Append" , len(actorList))
+            if npc is not None:
+                actorList.append(npc)
+                npc.set_autopilot = True
+                print('created%s'%npc.type_id)
 
-    time.sleep(15)
-
-
-    print('delete actorList')
-    if (len(actorList) != 0):
-        client.apply_batch([carla.command.DestroyActor(x) for x in actorList])
+        #Wait 15 seconds
+        time.sleep(15)
+    
+    finally:  
+        #Destory all the actors  
+        print('delete actorList')
+        if (len(actorList) != 0):
+            client.apply_batch([carla.command.DestroyActor(x) for x in actorList])
 
 
 if __name__ == '__main__':
