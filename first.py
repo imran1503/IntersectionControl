@@ -30,7 +30,7 @@ def main():
         #Spawn Cybertruck Vehicle actor, add to actorList
         blueprintLibrary = world.get_blueprint_library()
         vehicle_bp = blueprintLibrary.filter('cybertruck')[0]
-        transform = carla.Transform(carla.Location(x=200, y=195, z=200), carla.Rotation(yaw=0))
+        transform = carla.Transform(carla.Location(x=200, y=195, z=10), carla.Rotation(yaw=0))
         vehicle = world.try_spawn_actor(vehicle_bp, transform)
         vehicle.set_autopilot = True
         print("Len pre Append" , (len(actorList)))
