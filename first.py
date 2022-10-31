@@ -44,8 +44,8 @@ def main():
         camera.listen(lambda image: image.save_to_disk('output/%d064.png'%image.frame))
 
         #Spawn multiple random vehicles with autopilot
-        for _ in range(0,100):
-            transform.location.x += 8.0
+        for _ in range(0,20):
+            transform.location.x += 16.0
             bp = blueprintLibrary.filter('vehicle.*')[0]
             npc = world.try_spawn_actor(bp,transform)
 
