@@ -2,8 +2,7 @@ import sys
 import math
 import glob
 import os
-import numpy as np
-import cv2
+import numpy as nps
 import queue
 
 
