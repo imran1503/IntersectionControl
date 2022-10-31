@@ -22,21 +22,21 @@ def get_speed(vehicle):
 
 class VehiclePIDController():
     
-    def __init__(self, vehicle, args_lateral, args_longitudinal, max_throttle=0.75, max_break=0.3, max_steering=0.8):
+    def __init__(self, vehicle, args_lateral, args_longitudinal, max_throttle=12.75, max_break=0.3, max_steering=0.8):
         self.max_break = max_break
         self.max_steering = max_steering
         self.max_throttle = max_throttle
 
         self.vehicle = vehicle
         self.world = vehicle.get_world()
-        self.past_steering = self.vehicle.get_control.steer
+        self.past_steering = self.vehicle.get_control().steer
         self.long_controller = PIDLongitudinalControl(self.vehicle, **args_longitudinal)
         self.lat_controller = PIDLateralControl(self.vehicle, **args_lateral)
 
     def run_step(self, target_speed, waypoint):
         acceleration = self.long_controller.run_step(target_speed)
         current_steering = self.lat_controller.run_step(waypoint)
-        control = carla.VehicleControl
+        control = carla.VehicleControl()
 
         if acceleration>=0.0:
             control.throttle = min(abs(acceleration),self.max_throttle)
@@ -72,7 +72,7 @@ class PIDLongitudinalControl():
         self.K_D = K_D
         self.K_I = K_I
         self.dt = dt
-        self.errorBuffer = queue.deque(maxLen = 10)
+        self.errorBuffer = queue.deque(maxlen = 10)
 
     def pid_controller(self,target_speed, current_speed):
         error = target_speed - current_speed
@@ -102,7 +102,7 @@ class PIDLateralControl():
         self.K_D = K_D
         self.K_I = K_I
         self.dt = dt
-        self.errorBuffer = queue.deque(maxLen = 10)
+        self.errorBuffer = queue.deque(maxlen = 10)
 
     def pid_controller(self,waypoint, vehicle_transform):
             v_begin = vehicle_transform.location
@@ -128,7 +128,7 @@ class PIDLateralControl():
                 de = 0.0
                 ie = 0.0
 
-            return np.clip((self.K_P*dot)+(self.K_I*ie)+(self.K_D*de),-1.0,1.0)
+            return np.clip((self.K_P*dot)+(self.K_I*ie)+(self.K_D*de),-0.0,0.0)
 
     def run_step(self, waypoint):
         return self.pid_controller(waypoint,self.vehicle.get_transform())
@@ -145,11 +145,13 @@ def main():
         #Spawn Cybertruck Vehicle actor, add to actorList
         blueprint_library = world.get_blueprint_library()
         vehicle_bp = blueprint_library.filter('cybertruck')[0]
-        spawnpoint = carla.Transform(carla.Location(x=-75.4, y=-1.0, z=15), carla.Rotation(pitch=0,yaw=0))
+        spawnpoint = carla.Transform(carla.Location(x=200, y=195, z=4), carla.Rotation(pitch=0,yaw=0))
         vehicle = world.try_spawn_actor(vehicle_bp, spawnpoint)
         actorList.append(vehicle)
 
-        control_vehicle = VehiclePIDController(vehicle,args_Lateral={'K_P':1, 'K_D':0.0, 'K_I':0.0},args_Longitudinal={'K_P':1, 'K_D':0.0, 'K_I':0.0})
+        args_Lateral = {'K_P': 1, 'K_D': 0.0, 'K_I': 0.0}
+        args_Longitudinal = {'K_P': 1, 'K_D': 0.0, 'K_I': 0.0}
+        control_vehicle = VehiclePIDController(vehicle,args_Lateral,args_Longitudinal)
 
         while True:
             waypoints = world.get_map().get_waypoint(vehicle.get_location())
