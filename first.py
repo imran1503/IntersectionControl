@@ -32,10 +32,19 @@ def main():
         vehicle_bp = blueprintLibrary.filter('cybertruck')[0]
         transform = carla.Transform(carla.Location(x=200, y=195, z=10), carla.Rotation(yaw=0))
         vehicle = world.try_spawn_actor(vehicle_bp, transform)
-        vehicle.set_autopilot = True
         print("Len pre Append" , (len(actorList)))
         actorList.append(vehicle)
         print("Len post Append" , len(actorList))
+
+        #Add Camera sensor to Vehicle
+        camera_bp = blueprintLibrary.find('sensor.camera.rgb')
+        camera_bp.set_attribute('image_size_x',800)
+        camera_bp.set_attribute('image_size_y',600)
+        camera_bp.set_attribute('fov',90)
+        camera_transform = carla.Transform(carla.Location(x=1.5,z=2.4))
+        camera = world.spawn_actor(camera_bp,camera_transform,attach_to=vehicle)
+        #Save images from camera to output folder
+        camera.listen(lambda image: image.save_to_disk('output/%d064.png'%image.frame))
 
         #Spawn multiple random vehicles with autopilot
         for _ in range(0,100):
