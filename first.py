@@ -22,7 +22,6 @@ def main():
         client = carla.Client('localhost', 2000)
         client.set_timeout(10.0)
         world = client.get_world()
-        print(client.get_available_maps())
 
         #Spawn Cybertruck Vehicle actor, add to actorList
         blueprintLibrary = world.get_blueprint_library()
@@ -37,15 +36,37 @@ def main():
         vehicle.set_autopilot(True)
         actorList.append(vehicle)
 
-        #Add Camera sensor to Vehicle
+        #Add Camera rgb sensor to Vehicle
         camera_bp = blueprintLibrary.find('sensor.camera.rgb')
         camera_bp.set_attribute("image_size_x", str(800))
         camera_bp.set_attribute("image_size_y", str(600))
         camera_bp.set_attribute("fov", str(90))
         camera_transform = carla.Transform(carla.Location(x=1.5,z=2.4))
-        camera = world.spawn_actor(camera_bp,camera_transform,attach_to=vehicle)
+        rgbCamera = world.spawn_actor(camera_bp,camera_transform,attach_to=vehicle)
         #Save images from camera to output folder
-        camera.listen(lambda image: image.save_to_disk('output/%d064.png'%image.frame))
+        rgbCamera.listen(lambda image: image.save_to_disk('data/rgb/%d001.png' % image.frame, carla.ColorConverter.Raw))
+
+        # Add Camera depth sensor to Vehicle
+        camera_bp = blueprintLibrary.find('sensor.camera.depth')
+        camera_bp.set_attribute("image_size_x", str(800))
+        camera_bp.set_attribute("image_size_y", str(600))
+        camera_bp.set_attribute("fov", str(90))
+        camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+        depthCamera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
+        print("\nAdded depth sensor\n")
+        # Save images from camera to output folder
+        depthCamera.listen(lambda image: image.save_to_disk('data/depth/%d001.png' % image.frame, carla.ColorConverter.Depth))
+
+        # Add Camera segmentation sensor to Vehicle
+        camera_bp = blueprintLibrary.find('sensor.camera.semantic_segmentation')
+        camera_bp.set_attribute("image_size_x", str(800))
+        camera_bp.set_attribute("image_size_y", str(600))
+        camera_bp.set_attribute("fov", str(90))
+        camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+        segmentationCamera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
+        print("\nAdded segmentation sensor\n")
+        # Save images from camera to output folder
+        segmentationCamera.listen(lambda image: image.save_to_disk('data/segmentation/%d001.png' % image.frame, carla.ColorConverter.CityScapesPalette))
 
         #Spawn multiple random vehicles with autopilot
         for _ in range(0,20):
@@ -64,8 +85,8 @@ def main():
                 npc.set_autopilot(True)
                 print('created%s'%npc.type_id)
 
-        #Wait 120 seconds
-        time.sleep(120)
+        #Wait 10 seconds
+        time.sleep(10)
     
     finally:  
         #Destory all the actors  
