@@ -2,10 +2,8 @@ import glob
 import os
 import sys
 import random
-import matplotlib.pyplot as plt
 import time
 import numpy as np
-import argparse
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -17,24 +15,27 @@ except IndexError:
 
 import carla
 
-
 def main():
     actorList = []
     try:
         #Connect to carla server and load Town01 map
         client = carla.Client('localhost', 2000)
         client.set_timeout(10.0)
-        world = client.load_world('Town01')
+        world = client.get_world()
         print(client.get_available_maps())
 
         #Spawn Cybertruck Vehicle actor, add to actorList
         blueprintLibrary = world.get_blueprint_library()
         vehicle_bp = blueprintLibrary.filter('cybertruck')[0]
-        transform = carla.Transform(carla.Location(x=200, y=195, z=4), carla.Rotation(yaw=0))
-        vehicle = world.try_spawn_actor(vehicle_bp, transform)
-        print("Len pre Append" , (len(actorList)))
+        if not world.get_map().get_spawn_points():
+            print('There are no spawn points available in your map/town.')
+            print('Please add some Vehicle Spawn Point to your UE4 scene.')
+            sys.exit(1)
+        spawn_points = world.get_map().get_spawn_points()
+        spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+        vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
+        vehicle.set_autopilot(True)
         actorList.append(vehicle)
-        print("Len post Append" , len(actorList))
 
         #Add Camera sensor to Vehicle
         camera_bp = blueprintLibrary.find('sensor.camera.rgb')
@@ -48,17 +49,23 @@ def main():
 
         #Spawn multiple random vehicles with autopilot
         for _ in range(0,20):
-            transform.location.x += 16.0
             bp = blueprintLibrary.filter('vehicle.*')[0]
-            npc = world.try_spawn_actor(bp,transform)
+            if not world.get_map().get_spawn_points():
+                print('There are no spawn points available in your map/town.')
+                print('Please add some Vehicle Spawn Point to your UE4 scene.')
+                sys.exit(1)
+            spawn_points = world.get_map().get_spawn_points()
+            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            npc = world.try_spawn_actor(bp, spawn_point)
+            actorList.append(vehicle)
 
             if npc is not None:
                 actorList.append(npc)
                 npc.set_autopilot(True)
                 print('created%s'%npc.type_id)
 
-        #Wait 15 seconds
-        time.sleep(15)
+        #Wait 120 seconds
+        time.sleep(120)
     
     finally:  
         #Destory all the actors  

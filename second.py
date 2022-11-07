@@ -4,6 +4,7 @@ import glob
 import os
 import numpy as np
 import queue
+import random
 
 
 try:
@@ -22,7 +23,7 @@ def get_speed(vehicle):
 
 class VehiclePIDController():
     
-    def __init__(self, vehicle, args_lateral, args_longitudinal, max_throttle=12.75, max_break=0.3, max_steering=0.8):
+    def __init__(self, vehicle, args_lateral, args_longitudinal, max_throttle=45, max_break=10, max_steering=10):
         self.max_break = max_break
         self.max_steering = max_steering
         self.max_throttle = max_throttle
@@ -128,7 +129,7 @@ class PIDLateralControl():
                 de = 0.0
                 ie = 0.0
 
-            return np.clip((self.K_P*dot)+(self.K_I*ie)+(self.K_D*de),-0.0,0.0)
+            return np.clip((self.K_P*dot)+(self.K_I*ie)+(self.K_D*de),-1.0,1.0)
 
     def run_step(self, waypoint):
         return self.pid_controller(waypoint,self.vehicle.get_transform())
@@ -145,18 +146,32 @@ def main():
         #Spawn Cybertruck Vehicle actor, add to actorList
         blueprint_library = world.get_blueprint_library()
         vehicle_bp = blueprint_library.filter('cybertruck')[0]
-        spawnpoint = carla.Transform(carla.Location(x=200, y=195, z=4), carla.Rotation(pitch=0,yaw=0))
-        vehicle = world.try_spawn_actor(vehicle_bp, spawnpoint)
+        if not world.get_map().get_spawn_points():
+            print('There are no spawn points available in your map/town.')
+            print('Please add some Vehicle Spawn Point to your UE4 scene.')
+            sys.exit(1)
+        spawn_points = world.get_map().get_spawn_points()
+        spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+        vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
         actorList.append(vehicle)
 
         args_Lateral = {'K_P': 1, 'K_D': 0.0, 'K_I': 0.0}
         args_Longitudinal = {'K_P': 1, 'K_D': 0.0, 'K_I': 0.0}
         control_vehicle = VehiclePIDController(vehicle,args_Lateral,args_Longitudinal)
 
+        waypoints = world.get_map().generate_waypoints(1000)
+        for w in waypoints:
+            world.debug.draw_string(w.transform.location, 'O', draw_shadow=False,
+                                          color=carla.Color(r=0, g=0, b=255), life_time=120.0,
+                                          persistent_lines=True)
+
         while True:
             waypoints = world.get_map().get_waypoint(vehicle.get_location())
-            waypoint = np.random.choice(waypoints.next(0.3))
-            control_signal = control_vehicle.run_step(5,waypoint)
+            waypoint = np.random.choice(waypoints.next(10))
+            world.debug.draw_string(waypoint.transform.location, 'O', draw_shadow=False,
+                                    color=carla.Color(r=255, g=0, b=0), life_time=120.0,
+                                    persistent_lines=True)
+            control_signal = control_vehicle.run_step(25,waypoint)
             vehicle.apply_control(control_signal)
 
             #depth_camera_bp = blueprint_library.find('sensor.camera.semantic_segmentation')
