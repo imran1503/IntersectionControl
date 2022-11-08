@@ -37,17 +37,17 @@ class DatasetHandler:
         # Define segmentation Colormap
         self.colour_mappings = {
             'None': (0, 0, 0),  # Black
-            'Buildings': (255, 0, 0),  # Red
-            'Fences': (0, 0, 0),  # Black
-            'Other': (0, 0, 0),  # Black
+            'Buildings': (70, 70, 70),  # Red
+            'Fences': (100, 40, 40),  # Black
+            'Other': (55, 90, 80),  # Black
             'Pedestrians': (0, 255, 255),  # Green
             'Poles': (255, 255, 255),  # White
-            'RoadLines': (255, 0, 255),  # Purple
-            'Roads': (0, 0, 255),  # Blue
-            'Sidewalks': (255, 255, 0),  # Yellow
-            'Vegetation': (0, 0, 0),  # Black
-            'Vehicles': (0, 255, 0),  # Teal
-            'Walls': (0, 0, 0)  # black
+            'RoadLines': (157, 234, 50),  # Purple
+            'Roads': (128, 64, 128),  # Blue
+            'Sidewalks': (244, 35, 232),  # Yellow
+            'Vegetation': (107, 142, 35),  # Black
+            'Vehicles': (0, 0, 142),  # Teal
+            'Walls': (102, 102, 156) # black
         }
 
         # Read first frame
@@ -79,9 +79,9 @@ class DatasetHandler:
         self.object_detection = object_dicts[self.current_frame]
 
     def _read_lane_midpoint(self):
-        midpoint_dict = {0: np.array([800, 900]),
-                         1: np.array([800, 900]),
-                         2: np.array([700, 900])}
+        midpoint_dict = {0: np.array([500, 500]),
+                         1: np.array([500, 500]),
+                         2: np.array([500, 500])}
 
         self.lane_midpoint = midpoint_dict[self.current_frame]
 
@@ -126,22 +126,22 @@ class DatasetHandler:
     def vis_segmentation(self, segmented_image):
         colored_segmentation = np.zeros(self.image.shape)
 
-        colored_segmentation[segmented_image ==
-                             1] = self.colour_mappings['Buildings']
-        colored_segmentation[segmented_image ==
-                             4] = self.colour_mappings['Pedestrians']
-        colored_segmentation[segmented_image ==
-                             5] = self.colour_mappings['Poles']
-        colored_segmentation[segmented_image ==
-                             6] = self.colour_mappings['RoadLines']
-        colored_segmentation[segmented_image ==
-                             7] = self.colour_mappings['Roads']
-        colored_segmentation[segmented_image ==
-                             8] = self.colour_mappings['Sidewalks']
-        colored_segmentation[segmented_image ==
-                             10] = self.colour_mappings['Vehicles']
+        colored_segmentation[np.where((segmented_image ==
+                             1).all(axis=2))] = self.colour_mappings['Buildings']
+        colored_segmentation[np.where((segmented_image ==
+                             4).all(axis=2))] = self.colour_mappings['Pedestrians']
+        colored_segmentation[np.where((segmented_image ==
+                             5).all(axis=2))] = self.colour_mappings['Poles']
+        colored_segmentation[np.where((segmented_image ==
+                             6).all(axis=2))] = self.colour_mappings['RoadLines']
+        colored_segmentation[np.where((segmented_image ==
+                             7).all(axis=2))] = self.colour_mappings['Roads']
+        colored_segmentation[np.where((segmented_image ==
+                             8).all(axis=2))] = self.colour_mappings['Sidewalks']
+        colored_segmentation[np.where((segmented_image ==
+                             10).all(axis=2))] = self.colour_mappings['Vehicles']
 
-        return colored_segmentation.astype(np.uint8)
+        return colored_segmentation.astype(np.uint)
 
     def vis_object_detection(self, objects):
 
