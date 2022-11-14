@@ -158,8 +158,8 @@ def add_open3d_axis(vis):
 
 def main(arg):
     """Main function of the script"""
-    client = carla.Client(arg.host, arg.port)
-    client.set_timeout(2.0)
+    client = carla.Client('localhost', 2000)
+    client.set_timeout(10.0)
     world = client.get_world()
 
     try:

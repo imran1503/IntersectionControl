@@ -6,6 +6,10 @@ matplotlib~=3.5.3
 open3d~=0.16.0
 Pillow~=9.2.0
 
-numpy~=1.18.4
+numpy~=1.21.6
 carla~=0.9.13
 opencv-python~=4.6.0.66
+six~=1.16.0
+tensorflow~=2.10.0
+utils~=1.0.1
+tensorflow-gpu~=2.10.0
