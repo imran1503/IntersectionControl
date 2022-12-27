@@ -174,9 +174,9 @@ def main():
             control_signal = control_vehicle.run_step(25,waypoint)
             vehicle.apply_control(control_signal)
 
-            #depth_camera_bp = blueprint_library.find('sensor.camera.semantic_segmentation')
-            #depth_camera_transform = carla.Transform(carla.Location(x=1.5,z=2.4))
-            #depth_camera = world.spawn_actor(depth_camera_bp,depth_camera_transform,attach_to=vehicle)
+            depth_camera_bp = blueprint_library.find('sensor.camera.semantic_segmentation')
+            depth_camera_transform = carla.Transform(carla.Location(x=1.5,z=2.4))
+            depth_camera = world.spawn_actor(depth_camera_bp,depth_camera_transform,attach_to=vehicle)
             #Save images from camera to output folder
             #depth_camera.listen(lambda image: image.#save_to_disk('output/%.6d.png'%image.frame,carla.ColorConverter.LogarithmicDepth))
 
