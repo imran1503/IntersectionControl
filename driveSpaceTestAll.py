@@ -7,8 +7,6 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
-import threading
-
 
 try:
     sys.path.append(glob.glob('../../../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -20,157 +18,177 @@ except IndexError:
 
 import carla
 
-IM_HEIGHT = 800
-IM_WIDTH = 600
-FOV = 110
+class driveSpaceTestAll():
+    def __init__(self):
+        self.IM_HEIGHT = 800
+        self.IM_WIDTH = 600
+        self.FOV = 110
+        self.StoredImage = None
+        self.firstImage = True
+        self.fig = None
+        self.ax = None
+        self.myPlot = None
 
+    def processImage(self,image):
+        i = np.array(image.raw_data)
+        i2 = i.reshape((self.IM_HEIGHT, self.IM_WIDTH, 4))
+        i3 = i2[:, :, :3]
+        cv2.imshow("", i3)
+        cv2.waitKey(1)
+        image.save_to_disk('data/rgb/%d001.png' % image.frame)
+        return i3 / 255.0
 
+    def plotGrid(self):
+        # Convert the image to grayscale
+        image = self.StoredImage.convert("L")
 
-def processImage(image):
-    i = np.array(image.raw_data)
-    i2 = i.reshape((IM_HEIGHT, IM_WIDTH, 4))
-    i3 = i2[:, :, :3]
-    cv2.imshow("", i3)
-    cv2.waitKey(1)
-    image.save_to_disk('data/rgb/%d001.png' % image.frame)
-    return i3 / 255.0
+        # Threshold the image to create a binary map
+        threshold = 0.2
+        image = np.array(image)
+        image[image > threshold] = 1
+        image[image <= threshold] = 0
 
+        # Create a 2D numpy array
+        data = np.array(image)
 
-def gridPlot(image):
-    image = image.convert('RGB')
+        if self.firstImage:
+            # Set up figure and 2D axis
 
+            self.fig, self.ax = plt.subplots()
 
-def processSegmentedImage(image):
-    frameNumber = image.frame
-    image.save_to_disk('data/segmentation/%d001.png' % frameNumber, carla.ColorConverter.CityScapesPalette)
-    image = Image.open('D:/CARLA_0.9.13/WindowsNoEditor/PythonAPI/examples/IntersectionControlSystemGit/IntersectionControlSystem/data/segmentation/%d001.png' % frameNumber)
-    width, height = image.size
-    image = image.convert('RGB')
+            # Plot the array using imshow
+            self.myPlot = self.ax.imshow(data, cmap='gray')
 
-    # Iterate over all pixels in the image
-    for x in range(width):
-        for y in range(height):
-            # Get the pixel at the current position
-            pixel = image.getpixel((x, y))
+            # Add axis labels and tick marks
+            plt.xlabel("X")
+            plt.ylabel("Y")
 
-            roadColor = (128, 64, 128)
-            laneColor = (157, 234, 50)
+            plt.ion()
+            plt.pause(0.1)
+            self.firstImage = False
+            print("Plot created!")
 
-            # Check if the pixel matches the specific RGB value
-            if (pixel == roadColor) or (pixel == laneColor):
-                # Convert the pixel to a different color
-                image.putpixel((x, y), (0, 255, 0))  # Green
-            else:
-                image.putpixel((x, y), (0, 0, 0))  # Black
+        else:
+            # Update plot data
+            self.myPlot.set_data(data)
+            plt.pause(0.1)
 
-    # Save the modified image
-    #image.save('D:/CARLA_0.9.13/WindowsNoEditor/PythonAPI/examples/IntersectionControlSystemGit/IntersectionControlSystem/data/driveSpace/%d001.png' % frameNumber)
+    def driveSpaceConversion(self):
+        width, height = self.StoredImage.size
+        image = self.StoredImage.convert('RGB')
 
-    # Convert the image to grayscale
-    image = image.convert("L")
+        # Iterate over all pixels in the image
+        for x in range(width):
+            for y in range(height):
+                # Get the pixel at the current position
+                pixel = image.getpixel((x, y))
 
-    # Threshold the image to create a binary map
-    threshold = 0.2
-    image = np.array(image)
-    image[image > threshold] = 1
-    image[image <= threshold] = 0
+                roadColor = (128, 64, 128)
+                laneColor = (157, 234, 50)
 
-    # The image is now a 2D numpy array representing the grid map
+                # Check if the pixel matches the specific RGB value
+                if (pixel == roadColor) or (pixel == laneColor):
+                    # Convert the pixel to a different color
+                    image.putpixel((x, y), (0, 255, 0))  # Green
+                else:
+                    image.putpixel((x, y), (0, 0, 0))  # Black
 
-    # Create a 2D numpy array
-    data = np.array(image)
+        # Save the modified image
+        self.StoredImage = image
+        # image.save('D:/CARLA_0.9.13/WindowsNoEditor/PythonAPI/examples/IntersectionControlSystemGit/IntersectionControlSystem/data/driveSpace/%d001.png' % frameNumber)
 
-    # Plot the array using imshow
-    plt.imshow(data, cmap='gray')
+    def processSegmentedImage(self,image):
+        frameNumber = image.frame
+        image.save_to_disk('data/segmentation/%d001.png' % frameNumber, carla.ColorConverter.CityScapesPalette)
+        self.StoredImage = Image.open('D:/CARLA_0.9.13/WindowsNoEditor/PythonAPI/examples/IntersectionControl/data/segmentation/%d001.png' % frameNumber)
 
-    # Add axis labels and tick marks
-    plt.xlabel("X")
-    plt.ylabel("Y")
+        self.driveSpaceConversion()
+        self.plotGrid()
 
-    plt.show()
+    def main(self):
+        actorList = []
+        try:
+            # Connect to carla server and load Town01 map
+            client = carla.Client('localhost', 2000)
+            client.set_timeout(10.0)
+            world = client.get_world()
 
-def main():
-    actorList = []
-    try:
-        # Connect to carla server and load Town01 map
-        client = carla.Client('localhost', 2000)
-        client.set_timeout(10.0)
-        world = client.get_world()
-
-        # Spawn Cybertruck Vehicle actor, add to actorList
-        blueprintLibrary = world.get_blueprint_library()
-        vehicle_bp = blueprintLibrary.filter('cybertruck')[0]
-        if not world.get_map().get_spawn_points():
-            print('There are no spawn points available in your map/town.')
-            print('Please add some Vehicle Spawn Point to your UE4 scene.')
-            sys.exit(1)
-        spawn_points = world.get_map().get_spawn_points()
-        spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-        vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
-        vehicle.set_autopilot(True)
-        actorList.append(vehicle)
-
-        # Add Camera rgb sensor to Vehicle
-        camera_bp = blueprintLibrary.find('sensor.camera.rgb')
-        camera_bp.set_attribute("image_size_x", f"{IM_HEIGHT}")
-        camera_bp.set_attribute("image_size_y", f"{IM_WIDTH}")
-        camera_bp.set_attribute("fov", f"{FOV}")
-        camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
-        rgbCamera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
-        # Save images from camera to output folder
-        rgbCamera.listen(lambda image: processImage(image))
-
-        # Add Camera depth sensor to Vehicle
-        camera_bp = blueprintLibrary.find('sensor.camera.depth')
-        camera_bp.set_attribute("image_size_x", f"{IM_HEIGHT}")
-        camera_bp.set_attribute("image_size_y", f"{IM_WIDTH}")
-        camera_bp.set_attribute("fov", f"{FOV}")
-        camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
-        depthCamera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
-        print("\nAdded depth sensor\n")
-        # Save images from camera to output folder
-        depthCamera.listen(
-            lambda image: image.save_to_disk('data/depth/%d001.png' % image.frame, carla.ColorConverter.Depth))
-
-
-        # Add Camera segmentation sensor to Vehicle
-        camera_bp = blueprintLibrary.find('sensor.camera.semantic_segmentation')
-        camera_bp.set_attribute("image_size_x", f"{IM_HEIGHT}")
-        camera_bp.set_attribute("image_size_y", f"{IM_WIDTH}")
-        camera_bp.set_attribute("fov", f"{FOV}")
-        camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
-        segmentationCamera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
-        print("\nAdded segmentation sensor\n")
-        # Save images from camera to output folder
-
-        segmentationCamera.listen(lambda image: processSegmentedImage(image))
-
-        # Spawn multiple random vehicles with autopilot
-        for _ in range(0, 5):
-            bp = blueprintLibrary.filter('vehicle.*')[0]
+            # Spawn Cybertruck Vehicle actor, add to actorList
+            blueprintLibrary = world.get_blueprint_library()
+            vehicle_bp = blueprintLibrary.filter('model3')[0]
             if not world.get_map().get_spawn_points():
                 print('There are no spawn points available in your map/town.')
                 print('Please add some Vehicle Spawn Point to your UE4 scene.')
                 sys.exit(1)
             spawn_points = world.get_map().get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            npc = world.try_spawn_actor(bp, spawn_point)
+            vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
+            vehicle.set_autopilot(True)
             actorList.append(vehicle)
 
-            if npc is not None:
-                actorList.append(npc)
-                npc.set_autopilot(True)
-                print('created%s' % npc.type_id)
+            # Add Camera rgb sensor to Vehicle
+            camera_bp = blueprintLibrary.find('sensor.camera.rgb')
+            camera_bp.set_attribute("image_size_x", f"{self.IM_HEIGHT}")
+            camera_bp.set_attribute("image_size_y", f"{self.IM_WIDTH}")
+            camera_bp.set_attribute("fov", f"{self.FOV}")
+            camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+            rgbCamera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
+            # Save images from camera to output folder
+            rgbCamera.listen(lambda image: self.processImage(image))
 
-        # Wait 10 seconds
-        time.sleep(20)
+            # Add Camera depth sensor to Vehicle
+            camera_bp = blueprintLibrary.find('sensor.camera.depth')
+            camera_bp.set_attribute("image_size_x", f"{self.IM_HEIGHT}")
+            camera_bp.set_attribute("image_size_y", f"{self.IM_WIDTH}")
+            camera_bp.set_attribute("fov", f"{self.FOV}")
+            camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+            depthCamera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
+            print("\nAdded depth sensor\n")
+            # Save images from camera to output folder
+            depthCamera.listen(
+                lambda image: image.save_to_disk('data/depth/%d001.png' % image.frame, carla.ColorConverter.Depth))
 
-    finally:
-        # Destory all the actors
-        print('delete actorList')
-        if (len(actorList) != 0):
-            client.apply_batch([carla.command.DestroyActor(x) for x in actorList])
+
+            # Add Camera segmentation sensor to Vehicle
+            camera_bp = blueprintLibrary.find('sensor.camera.semantic_segmentation')
+            camera_bp.set_attribute("image_size_x", f"{self.IM_HEIGHT}")
+            camera_bp.set_attribute("image_size_y", f"{self.IM_WIDTH}")
+            camera_bp.set_attribute("fov", f"{self.FOV}")
+            camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+            segmentationCamera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
+            print("\nAdded segmentation sensor\n")
+
+            # Save images from camera to output folder
+
+            segmentationCamera.listen(lambda image: self.processSegmentedImage(image))
+
+            # Spawn multiple random vehicles with autopilot
+            for _ in range(0, 10):
+                bp = blueprintLibrary.filter('vehicle.*')[0]
+                if not world.get_map().get_spawn_points():
+                    print('There are no spawn points available in your map/town.')
+                    print('Please add some Vehicle Spawn Point to your UE4 scene.')
+                    sys.exit(1)
+                spawn_points = world.get_map().get_spawn_points()
+                spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+                npc = world.try_spawn_actor(bp, spawn_point)
+                actorList.append(vehicle)
+
+                if npc is not None:
+                    actorList.append(npc)
+                    npc.set_autopilot(True)
+                    print('created%s' % npc.type_id)
+
+            # Wait 10 seconds
+            time.sleep(60)
+            plt.ioff()
+
+        finally:
+            # Destory all the actors
+            print('delete actorList')
+            if (len(actorList) != 0):
+                client.apply_batch([carla.command.DestroyActor(x) for x in actorList])
 
 
 if __name__ == '__main__':
-    main()
+    driveSpaceTestAll().main()
