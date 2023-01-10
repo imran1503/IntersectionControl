@@ -19,7 +19,7 @@ for x in range(width):
     # Check if the pixel matches the specific RGB value
     if (pixel == roadColor) or (pixel == laneColor):
       # Convert the pixel to a different color
-      image.putpixel((x, y), (0, 255, 0))  # Green
+      image.putpixel((x, y), (255, 255, 255))  # White
     else:
         image.putpixel((x, y), (0, 0, 0))  # Black
 

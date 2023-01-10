@@ -3,6 +3,7 @@ import os
 import sys
 import random
 import time
+import io
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -38,6 +39,39 @@ class driveSpaceTestAll():
         image.save_to_disk('data/rgb/%d001.png' % image.frame)
         return i3 / 255.0
 
+    def driveForward(image):
+        canDriveForward = True
+
+        # Get the width and height of the image
+        width, height = image.size
+        image = image.convert('RGB')
+        buffer = 50
+        interable = 10
+        multiplier = 0
+        x = int(width/2)
+        plt.figure()
+        plt.imshow(image)
+
+        while(canDriveForward):
+            y = int(height - (multiplier*interable) - buffer)
+            pixel = image.getpixel((x, y))
+            pixel2 = image.getpixel((x, (y - (multiplier*interable+1))))
+            pixel3 = image.getpixel((x, (y - (multiplier*interable+2))))
+            white = (255, 255, 255)    
+            # Check if the pixel matches the specific RGB value
+            if ((y - (multiplier*interable+2))<0) or ((pixel == white) and (pixel2 == white) and (pixel3 == white)) :
+                
+                plt.scatter(x, y, s=10, c='red', marker='x')
+                multiplier += 1
+            else:
+                canDriveForward = False
+        
+        #Convert plot to PIL Image object and return it
+        img_buf = io.BytesIO()
+        plt.savefig(img_buf, format='png')
+        image = Image.open(img_buf)
+        return image
+
     def plotGrid(self):
         # Convert the image to grayscale
         image = self.StoredImage.convert("L")
@@ -47,6 +81,9 @@ class driveSpaceTestAll():
         image = np.array(image)
         image[image > threshold] = 1
         image[image <= threshold] = 0
+
+        #Add trajectory on image for driving forward
+        image = self.driveForward(image)
 
         # Create a 2D numpy array
         data = np.array(image)
