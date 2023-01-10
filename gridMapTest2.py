@@ -41,24 +41,35 @@ def driveForward(image):
     interable = 10
     multiplier = 0
     x = int(width/2)
+    vehicleWidth = 100
     i = 0
     plt.figure()
     plt.imshow(image)
 
     while(canDriveForward):
-        y = int(height - (multiplier*interable) - buffer)
-        pixel = image.getpixel((x, y))
-        pixel2 = image.getpixel((x, (y - (multiplier*interable+1))))
-        pixel3 = image.getpixel((x, (y - (multiplier*interable+2))))
-        white = (255, 255, 255)    
-        # Check if the pixel matches the specific RGB value
-        if ((y - (multiplier*interable+2))<0) or ((pixel == white) and (pixel2 == white) and (pixel3 == white)) :
-            
-            plt.scatter(x, y, s=10, c='red', marker='x')
-            i +=1
-            multiplier += 1
-        else:
-            canDriveForward = False
+            y = int(height - (multiplier*interable) - buffer)
+            pixel = image.getpixel((x, y))
+            pixel2 = image.getpixel((x, (y - (multiplier*interable+1))))
+            pixel3 = image.getpixel((x, (y - (multiplier*interable+2))))
+            white = (255, 255, 255)
+            laneColor = (157, 234, 50)
+
+            #Check a row of pixels from the middle of the image using half of vehicle width
+            clearRow = True
+            halfWidth = int(vehicleWidth/2)
+            for j in range(-halfWidth,halfWidth):
+                pixel = image.getpixel((x+j, y))
+                pixel2 = image.getpixel((x+j, (y - (multiplier*interable+1))))
+                pixel3 = image.getpixel((x+j, (y - (multiplier*interable+2))))
+                if(((pixel != white) and (pixel != laneColor)) or ((pixel2 != white) and (pixel2 != laneColor)) or ((pixel3 != white) and (pixel3 != laneColor))):
+                    clearRow = False
+                
+            # Check if the pixel matches the specific RGB value
+            if ((y - (multiplier*interable+2))<0) and clearRow :
+                plt.scatter(x, y, s=10, c='red', marker='x')
+                multiplier += 1
+            else:
+                canDriveForward = False
 
     img_buf = io.BytesIO()
     plt.savefig(img_buf, format='png')

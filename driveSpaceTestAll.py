@@ -39,28 +39,37 @@ class driveSpaceTestAll():
         image.save_to_disk('data/rgb/%d001.png' % image.frame)
         return i3 / 255.0
 
-    def driveForward(image):
+    def driveForward(self, image):
         canDriveForward = True
 
         # Get the width and height of the image
         width, height = image.size
         image = image.convert('RGB')
+        vehicleWidth = 100
         buffer = 50
         interable = 10
         multiplier = 0
         x = int(width/2)
+        plt.ioff()
         plt.figure()
         plt.imshow(image)
 
         while(canDriveForward):
             y = int(height - (multiplier*interable) - buffer)
-            pixel = image.getpixel((x, y))
-            pixel2 = image.getpixel((x, (y - (multiplier*interable+1))))
-            pixel3 = image.getpixel((x, (y - (multiplier*interable+2))))
-            white = (255, 255, 255)    
-            # Check if the pixel matches the specific RGB value
-            if ((y - (multiplier*interable+2))<0) or ((pixel == white) and (pixel2 == white) and (pixel3 == white)) :
+            white = (255, 255, 255)
+
+            #Check a row of pixels from the middle of the image using half of vehicle width
+            clearRow = True
+            halfWidth = int(vehicleWidth/2)
+            for j in range(-halfWidth,halfWidth):
+                pixel = image.getpixel((x+j, y))
+                pixel2 = image.getpixel((x+j, (y - (multiplier*interable+1))))
+                pixel3 = image.getpixel((x+j, (y - (multiplier*interable+2))))
+                if((pixel != white) or (pixel2 != white) or (pixel3 != white)):
+                    clearRow = False
                 
+            # Check if the pixel matches the specific RGB value
+            if ((y - (multiplier*interable+2))<0) and clearRow :
                 plt.scatter(x, y, s=10, c='red', marker='x')
                 multiplier += 1
             else:
@@ -73,6 +82,9 @@ class driveSpaceTestAll():
         return image
 
     def plotGrid(self):
+        #Add trajectory on image for driving forward
+        self.StoredImage = self.driveForward(self.StoredImage)
+
         # Convert the image to grayscale
         image = self.StoredImage.convert("L")
 
@@ -81,9 +93,6 @@ class driveSpaceTestAll():
         image = np.array(image)
         image[image > threshold] = 1
         image[image <= threshold] = 0
-
-        #Add trajectory on image for driving forward
-        image = self.driveForward(image)
 
         # Create a 2D numpy array
         data = np.array(image)
@@ -126,7 +135,7 @@ class driveSpaceTestAll():
                 # Check if the pixel matches the specific RGB value
                 if (pixel == roadColor) or (pixel == laneColor):
                     # Convert the pixel to a different color
-                    image.putpixel((x, y), (0, 255, 0))  # Green
+                    image.putpixel((x, y), (255, 255, 255))  # White
                 else:
                     image.putpixel((x, y), (0, 0, 0))  # Black
 
