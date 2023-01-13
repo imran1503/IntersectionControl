@@ -19,6 +19,7 @@ except IndexError:
 
 import carla
 
+
 class driveSpaceTestAll():
     def __init__(self):
         self.IM_HEIGHT = 800
@@ -30,7 +31,7 @@ class driveSpaceTestAll():
         self.ax = None
         self.myPlot = None
 
-    def processImage(self,image):
+    def processImage(self, image):
         i = np.array(image.raw_data)
         i2 = i.reshape((self.IM_HEIGHT, self.IM_WIDTH, 4))
         i3 = i2[:, :, :3]
@@ -52,28 +53,28 @@ class driveSpaceTestAll():
         x = int(width/2)
         plt.imshow(image)
 
-        while(canDriveForward):
-            y = int(height - (multiplier*interable) - buffer)
+        while (canDriveForward):
+            y = int(height - (multiplier * interable) - buffer)
             white = (255, 255, 255)
 
-            #Check a row of pixels from the middle of the image using half of vehicle width
+            # Check a row of pixels from the middle of the image using half of vehicle width
             clearRow = True
-            halfWidth = int(vehicleWidth/2)
-            for j in range(-halfWidth,halfWidth):
-                pixel = image.getpixel((x+j, y))
-                pixel2 = image.getpixel((x+j, (y - (multiplier*interable+1))))
-                pixel3 = image.getpixel((x+j, (y - (multiplier*interable+2))))
-                if((pixel != white) or (pixel2 != white) or (pixel3 != white)):
+            halfWidth = int(vehicleWidth / 2)
+            for j in range(-halfWidth, halfWidth):
+                pixel = image.getpixel((x + j, y))
+                pixel2 = image.getpixel((x + j, (y - (multiplier * interable + 1))))
+                pixel3 = image.getpixel((x + j, (y - (multiplier * interable + 2))))
+                if ((pixel != white) or (pixel2 != white) or (pixel3 != white)):
                     clearRow = False
-                
+
             # Check if the pixel matches the specific RGB value
-            if ((y - (multiplier*interable+2))<0) and clearRow :
+            if ((y - (multiplier * interable + 2)) < 0) and clearRow:
                 plt.scatter(x, y, s=10, c='red', marker='x')
                 multiplier += 1
             else:
                 canDriveForward = False
-        
-        #Convert plot to PIL Image object and return it
+
+        # Convert plot to PIL Image object and return it
         img_buf = io.BytesIO()
         plt.savefig(img_buf, format='png')
         image = Image.open(img_buf)
@@ -141,10 +142,11 @@ class driveSpaceTestAll():
         self.StoredImage = image
         # image.save('D:/CARLA_0.9.13/WindowsNoEditor/PythonAPI/examples/IntersectionControlSystemGit/IntersectionControlSystem/data/driveSpace/%d001.png' % frameNumber)
 
-    def processSegmentedImage(self,image):
+    def processSegmentedImage(self, image):
         frameNumber = image.frame
         image.save_to_disk('data/segmentation/%d001.png' % frameNumber, carla.ColorConverter.CityScapesPalette)
-        self.StoredImage = Image.open('D:/CARLA_0.9.13/WindowsNoEditor/PythonAPI/examples/IntersectionControl/data/segmentation/%d001.png' % frameNumber)
+        self.StoredImage = Image.open(
+            'D:/CARLA_0.9.13/WindowsNoEditor/PythonAPI/examples/IntersectionControl/data/segmentation/%d001.png' % frameNumber)
 
         self.driveSpaceConversion()
         self.plotGrid()
@@ -191,7 +193,6 @@ class driveSpaceTestAll():
             # Save images from camera to output folder
             depthCamera.listen(
                 lambda image: image.save_to_disk('data/depth/%d001.png' % image.frame, carla.ColorConverter.Depth))
-
 
             # Add Camera segmentation sensor to Vehicle
             camera_bp = blueprintLibrary.find('sensor.camera.semantic_segmentation')
