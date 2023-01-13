@@ -50,9 +50,8 @@ class driveSpaceTestAll():
         buffer = 50
         interable = 10
         multiplier = 0
+        i = 0
         x = int(width/2)
-         # get a drawing context
-        d = ImageDraw.Draw(image)
 
         with image.convert("RGBA") as base:
 
@@ -87,19 +86,21 @@ class driveSpaceTestAll():
                     # draw text, half opacity
                     d.text((x, y), "x", font=fnt, fill=(255, 0, 0, 255))
                     multiplier += 1
+                    i += 1
                
                 else:
                     canDriveForward = False
                     
             out = Image.alpha_composite(base, txt)
+            print("Can move Forward "+str(i)+" times.")
             return out
 
     def plotGrid(self):
         #Add trajectory on image for driving forward
-        image = self.driveForward(self.StoredImage)
+        self.StoredImage = self.driveForward(self.StoredImage)
 
         # Convert the image to grayscale
-        image = image.convert("L")
+        image = self.StoredImage.convert("L")
 
         # Threshold the image to create a binary map
         threshold = 0.2

@@ -43,8 +43,6 @@ def driveForward(image):
     x = int(width/2)
     vehicleWidth = 50
     i = 0
-     # get a drawing context
-    d = ImageDraw.Draw(image)
 
     with image.convert("RGBA") as base:
 
