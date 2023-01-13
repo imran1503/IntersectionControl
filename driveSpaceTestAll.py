@@ -45,13 +45,11 @@ class driveSpaceTestAll():
         # Get the width and height of the image
         width, height = image.size
         image = image.convert('RGB')
-        vehicleWidth = 100
+        vehicleWidth = 50
         buffer = 50
         interable = 10
         multiplier = 0
         x = int(width/2)
-        plt.ioff()
-        plt.figure()
         plt.imshow(image)
 
         while(canDriveForward):
@@ -83,10 +81,10 @@ class driveSpaceTestAll():
 
     def plotGrid(self):
         #Add trajectory on image for driving forward
-        self.StoredImage = self.driveForward(self.StoredImage)
+        image = self.driveForward(self.StoredImage)
 
         # Convert the image to grayscale
-        image = self.StoredImage.convert("L")
+        image = image.convert("L")
 
         # Threshold the image to create a binary map
         threshold = 0.2
