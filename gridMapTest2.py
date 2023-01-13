@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 import numpy as np
 import io
@@ -41,16 +41,26 @@ def driveForward(image):
     interable = 10
     multiplier = 0
     x = int(width/2)
-    vehicleWidth = 100
+    vehicleWidth = 50
     i = 0
-    plt.figure()
-    plt.imshow(image)
+     # get a drawing context
+    d = ImageDraw.Draw(image)
 
-    while(canDriveForward):
+    with image.convert("RGBA") as base:
+
+        # make a blank image for the text, initialized to transparent text color
+        txt = Image.new("RGBA", base.size, (255, 255, 255, 0))
+
+        # get a font
+        fnt = ImageFont.truetype("arial.ttf", 15)
+        # get a drawing context
+        d = ImageDraw.Draw(txt)
+
+        while(canDriveForward):
             y = int(height - (multiplier*interable) - buffer)
             pixel = image.getpixel((x, y))
-            pixel2 = image.getpixel((x, (y - (multiplier*interable+1))))
-            pixel3 = image.getpixel((x, (y - (multiplier*interable+2))))
+            pixel2 = image.getpixel((x, (y - ((multiplier+1)*interable))))
+            pixel3 = image.getpixel((x, (y - ((multiplier+2)*interable))))
             white = (255, 255, 255)
             laneColor = (157, 234, 50)
 
@@ -59,25 +69,29 @@ def driveForward(image):
             halfWidth = int(vehicleWidth/2)
             for j in range(-halfWidth,halfWidth):
                 pixel = image.getpixel((x+j, y))
-                pixel2 = image.getpixel((x+j, (y - (multiplier*interable+1))))
-                pixel3 = image.getpixel((x+j, (y - (multiplier*interable+2))))
+                pixel2 = image.getpixel((x+j, (y - ((multiplier+1)*interable))))
+                pixel3 = image.getpixel((x+j, (y - ((multiplier+2)*interable))))
                 if(((pixel != white) and (pixel != laneColor)) or ((pixel2 != white) and (pixel2 != laneColor)) or ((pixel3 != white) and (pixel3 != laneColor))):
                     clearRow = False
                 
             # Check if the pixel matches the specific RGB value
-            if ((y - (multiplier*interable+2))<0) and clearRow :
-                plt.scatter(x, y, s=10, c='red', marker='x')
+            if ((y - ((multiplier+2)*interable))>0) and clearRow :
+                # draw text, half opacity
+                d.text((x, y), "x", font=fnt, fill=(255, 0, 0, 255))
                 multiplier += 1
+                i += 1
+                
+                
             else:
                 canDriveForward = False
+                
 
-    img_buf = io.BytesIO()
-    plt.savefig(img_buf, format='png')
+        out = Image.alpha_composite(base, txt)
 
-    image = Image.open(img_buf)
-    print("Moved Forward "+str(i)+" times. Can Not drive more forward.")
-    image.save('driveSpace2.png')
-    #plt.show()
+        out.show()
+
+        print("Moved Forward "+str(i)+" times. Can Not drive more forward.")
+        out.save('driveSpace2.png')
 
 image = Image.open("driveSpace1.png")
 driveForward(image)
