@@ -84,7 +84,7 @@ class driveSpaceTestAll():
                 # Check if the pixel matches the specific RGB value
                 if ((y - ((multiplier+2)*interable))>0) and clearRow :
                     # draw text, half opacity
-                    d.text((x, y), "x", font=fnt, fill=(255, 0, 0, 255))
+                    d.text((x, y), "x", font=fnt, fill=(0, 0, 0, 255))
                     multiplier += 1
                     i += 1
                
