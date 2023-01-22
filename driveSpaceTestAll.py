@@ -45,7 +45,6 @@ class driveSpaceTestAll():
 
         # Get the width and height of the image
         width, height = image.size
-        image = image.convert('RGB')
         vehicleWidth = 50
         buffer = 50
         interable = 10
@@ -59,7 +58,7 @@ class driveSpaceTestAll():
             txt = Image.new("RGBA", base.size, (255, 255, 255, 0))
 
             # get a font
-            fnt = ImageFont.truetype("arial.ttf", 15)
+            fnt = ImageFont.truetype("arial.ttf", 25)
             # get a drawing context
             d = ImageDraw.Draw(txt)
 
