@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<launch>
+	<param name="/use_sim_time" value="true"/>
+
+	<!-- Arguments -->
+  	<arg name="scan_topic" default="laser_scan" />
+	<arg name="map_file" default="$(find carla_ROS_SLAM)/src/map10_v4.yaml" />
+  	<arg name="odom_frame" default="carla/ego_vehicle/odometry"/>
+  	<arg name="base_frame" default="carla/ego_vehicle/lidar/lidar1"/>
+  	<arg name="global_frame" default="map"/>
+
+	<!-- Lidar Pointcloud to laserscan conversion -->
+    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan">
+     <remap from="cloud_in" to="/carla/ego_vehicle/lidar/lidar1/point_cloud"/>
+     <remap from="scan" to="$(arg scan_topic)" />
+     <rosparam>
+        target_frame: ego_vehicle/lidar/lidar1
+        transform_tolerance: 0.01
+        min_height: -2.0
+        max_height: 80.0
+        
+        angle_min: -3.14159
+        angle_max: 3.14159
+        angle_increment: 0.1
+        scan_time: 0.2
+        range_min: 0.0
+        range_max: 100.0
+        use_inf: true
+        
+        #concurrency_level affects number of pc queued for processing and the number of threadsused
+        # 0: Detect number of cores
+        # 1: Single threaded
+        # 2: inf : Parallelism level
+        concurrency_level: 2
+      </rosparam>
+    </node>
+    <!-- Load the map server and load a saved map -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
+		<param name="frame_id" value="$(arg global_frame)"/>
+    </node>
+
+  <!-- Run AMCL -->
+  <node pkg="amcl" type="amcl" name="amcl">
+	<param name="gui_publish_rate" value="10.0"/>
+    <param name="use_map_topic" value="false"/>
+    <param name="odom_frame_id" value="$(arg odom_frame)"/>
+    <param name="base_frame_id" value="$(arg base_frame)"/>
+	<param name="global_frame_id" value="$(arg global_frame)"/>
+	<param name="transform_tolerance" value="1.0"/>
+    <remap from="scan" to="$(arg scan_topic)" />
+
+    <!-- AMCL parameters -->
+    <param name="min_particles" value="50"/>
+    <param name="max_particles" value="5000"/>
+    <param name="kld_err" value="0.01"/>
+    <param name="kld_z" value="0.99"/>
+    <!-- ... -->
+  </node>
+  
+
+  <!-- Start the rviz node -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find carla_ROS_SLAM)/src/carla_lidar2.rviz">
+	<remap from="map" to="/map"/>
+  </node>
+
+</launch>
+

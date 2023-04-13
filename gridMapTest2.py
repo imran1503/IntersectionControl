@@ -5,7 +5,10 @@ import io
 import math
 
 # Open the image
-image = Image.open('./data/segmentation/7107001.png')
+frame = 24607001
+#image = Image.open('./data/segmentation/7107001.png')
+#image = Image.open('./data/segmentation/24601001.png')
+image = Image.open('./data/segmentation/24607001.png')
 segmentedImage = image
 
 # Get the width and height of the image
@@ -94,7 +97,7 @@ def turnRight(image):
         if ((y - ((multiplier+2)*interable))>0):
             # draw text, half opacity
             x -= 10
-            y -= 20
+            y -= 30
             d.text((x, y), "x", font=fnt, fill=(255, 0, 0, 255))
             x1 = x
             y1 = y
@@ -133,7 +136,7 @@ def turnRight(image):
 
             x = x4
             y = y4
-            for i in range(int(rightMove/2)):
+            for i in range(int(rightMove/4)):
                 tempX = x - ((i+1)*(deltaX/rightMove)*(rightMargin*2))
                 d.text((tempX, y), "x", font=fnt, fill=(255, 0, 0, 255))
                 trajectory.append((tempX,y))
@@ -146,7 +149,7 @@ def turnRight(image):
             y = y3
             for i in range(curve):
                 tempY = y - (i+1)*(deltaY/curve)
-                tempX = x4 - math.sqrt((radius*radius)-((y-tempY)*(y-tempY))) - 40 + (i*5)
+                tempX = x4 - math.sqrt((radius*radius)-((y-tempY)*(y-tempY))) - 40 + (i*10)
                 d.text((tempX, tempY), "x", font=fnt, fill=(255, 0, 0, 255))
                 trajectory.append((tempX,tempY))
             
@@ -172,7 +175,7 @@ def driveForward(image):
     interable = 10
     multiplier = 0
     x = int(width/2)
-    vehicleWidth = 50
+    vehicleWidth = 20
     i = 0
 
     with image.convert("RGBA") as base:
@@ -190,8 +193,9 @@ def driveForward(image):
             pixel = image.getpixel((x, y))
             pixel2 = image.getpixel((x, (y - ((multiplier+1)*interable))))
             pixel3 = image.getpixel((x, (y - ((multiplier+2)*interable))))
-            white = (255, 255, 255)
+            white = (128, 64, 128)
             laneColor = (157, 234, 50)
+            blue = (0,0,0)
 
             #Check a row of pixels from the middle of the image using half of vehicle width
             clearRow = True
@@ -206,7 +210,7 @@ def driveForward(image):
             # Check if the pixel matches the specific RGB value
             if ((y - ((multiplier+2)*interable))>0) and clearRow :
                 # draw text, half opacity
-                d.text((x, y), "x", font=fnt, fill=(0, 0, 0, 255))
+                d.text((x, y), "x", font=fnt, fill=(255, 0, 0, 255))
                 multiplier += 1
                 i += 1
                 
@@ -223,5 +227,5 @@ def driveForward(image):
         out.save('driveSpace2.png')
 
 image = Image.open("driveSpace1.png")
-#driveForward(image)
+#driveForward(segmentedImage)
 turnRight(segmentedImage)
