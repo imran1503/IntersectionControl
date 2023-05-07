@@ -2,7 +2,7 @@
 
 This is our 4th year project: Autonomous Vehicle Intersection Control: Yellow means Go Faster!
 
-The goal of this project was to navigate an autonomous vehicle through a trafficked intersection by following the calculated path. The vehicle has to determine the local and global environment which includes and is not limited to the cars, people and objects around it, the traffic light states, where we want to go (Turn left, Turn right, Go straight) and where the possible exits for the intersection are. The next step for the system is that it must create a path from the current position to the desired exit lane. After that the system must navigate the vehicle safely through the intersection.
+The goal of this project was to navigate an autonomous vehicle through a controlled intersection by following the calculated path. The vehicle has to determine the local and global environment which includes and is not limited to the cars, people and objects around it, the traffic light states, where we want to go (Turn left, Turn right, Go straight) and where the possible exits for the intersection are. The next step for the system is that it must create a path from the current position to the desired exit lane. After that the system must navigate the vehicle safely through the intersection.
 
 This project heavily revolves around two primary programs. The first is CARLA https://github.com/carla-simulator/carla/releases . The other program was ROS as well as the ROS CARLA bridge. https://github.com/ros-visualization. More on how to install these programs can be found in the final report that is provided by the project coordinators. 
 
